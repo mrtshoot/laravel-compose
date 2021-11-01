@@ -1,0 +1,51 @@
+version: '3'
+services:
+  # NGINX
+  nginx:
+    image: nginx:latest
+    tty: true
+    container_name: "mydigipay_nginx"
+    restart: unless-stopped
+    ports:
+      - "8030:80"
+    volumes:
+      - ./website/:/var/www/website/
+      - ./static/:/var/www/static/
+      - ./services/nginx/conf.d/:/etc/nginx/conf.d/
+      - ./log/nginx/:/var/log/nginx/
+    networks:
+      - mydigipay-network
+  # PHP
+  php:
+    tty: true
+    container_name: "mydigipay_php"
+    restart: unless-stopped
+    image: mydigipay:latest
+    build:
+      context: ./services/php
+    volumes:
+      - ./website/:/var/www/website/
+      - ./static/:/var/www/static/
+      - ./services/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - mydigipay-network
+    ports:
+      - 9000:9000
+    #extra_hosts:
+
+  # REDIS 
+  redis:
+    image: redis:latest
+    container_name: "mydigipay_redis"
+    tty: true
+    restart: unless-stopped
+    networks:
+      - mydigipay-network
+
+#Docker Networks
+networks:
+  mydigipay-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.1.1.0/24
